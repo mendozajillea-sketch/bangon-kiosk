@@ -1,0 +1,21 @@
+package com.bangon.kiosk.controller;
+import com.bangon.kiosk.dto.ApiDtos.*;import com.bangon.kiosk.entity.*;import com.bangon.kiosk.repository.*;import com.bangon.kiosk.service.*;
+import jakarta.validation.Valid;import org.springframework.security.core.Authentication;import org.springframework.web.bind.annotation.*;import java.util.*;
+@RestController @RequestMapping("/api") public class KioskController {
+ private final ProductRepository products;private final CategoryRepository cats;private final CustomerRepository customers;private final OrderRepository orders;private final OrderService service;private final PricingService pricing;
+ public KioskController(ProductRepository p,CategoryRepository c,CustomerRepository u,OrderRepository o,OrderService s,PricingService price){products=p;cats=c;customers=u;orders=o;service=s;pricing=price;}
+ private Customer current(Authentication a){return a==null||!a.isAuthenticated()?null:customers.findByEmailIgnoreCase(a.getName()).orElse(null);}
+ @GetMapping("/categories") public List<String> categories(){return cats.findAll().stream().map(c->c.name).toList();}
+ @GetMapping("/products") public List<Map<String,Object>> products(@RequestParam(required=false) String category,@RequestParam(required=false) String search){return products.findByActiveTrueOrderByIdAsc().stream().filter(p->category==null||p.category.name.equalsIgnoreCase(category)).filter(p->search==null||p.name.toLowerCase().contains(search.toLowerCase())).map(this::product).toList();}
+ private Map<String,Object> product(Product p){Map<String,Object> m=new LinkedHashMap<>();m.put("id",p.id);m.put("category",p.category.name);m.put("name",p.name);m.put("price",p.price);m.put("caffeine",p.caffeine);m.put("calories",p.calories);m.put("image",p.image);m.put("pastry",p.pastry);return m;}
+ @GetMapping("/products/{id}") public Map<String,Object> product(@PathVariable Long id){return product(products.findById(id).orElseThrow(()->new IllegalArgumentException("Product not found")));}
+ @GetMapping("/products/{id}/options") public Object options(@PathVariable Long id){Product p=products.findById(id).orElseThrow();return p.pastry?Map.of("customizable",false):Map.of("customizable",true,"sizes",List.of("small","medium","large"),"milk",List.of("whole","oat","almond"),"sweetness",List.of(25,50,100),"addons",List.of("extraShot","caramel","cream"));}
+ @PostMapping("/quote") public Object quote(@RequestBody Line line){Product p=products.findById(line.productId()).orElseThrow(()->new IllegalArgumentException("Product not found"));return pricing.quote(p,line.choices());}
+ @GetMapping("/customers/me") public Object me(Authentication auth){Customer c=current(auth);if(c==null)throw new IllegalArgumentException("Not signed in");return profile(c);}
+ private Object profile(Customer c){return Map.of("id",c.id,"name",c.name,"email",c.email,"caffeineLimit",c.caffeineLimit,"calorieGoal",c.calorieGoal,"lactoseIntolerant",c.lactoseIntolerant,"points",c.loyaltyPoints);}
+ @PutMapping("/customers/me") public Object update(@Valid @RequestBody ProfileUpdate req,Authentication a){Customer c=current(a);c.caffeineLimit=req.caffeineLimit();c.calorieGoal=req.calorieGoal();c.lactoseIntolerant=req.lactoseIntolerant();return profile(customers.save(c));}
+ @PostMapping("/orders") public Object order(@Valid @RequestBody Checkout req,Authentication auth){return service.view(service.place(req,current(auth)));}
+ @GetMapping("/orders/{id}") public Object order(@PathVariable Long id,Authentication auth){Order o=orders.findById(id).orElseThrow(()->new IllegalArgumentException("Order not found"));Customer user=current(auth);if(o.customer==null||user==null||!o.customer.id.equals(user.id))throw new org.springframework.security.access.AccessDeniedException("Not your order");return service.view(o);}
+ @GetMapping("/customers/me/orders") public Object history(Authentication auth){return orders.findByCustomerIdOrderByCreatedAtDesc(current(auth).id).stream().map(service::view).toList();}
+ @PostMapping("/admin/orders/{id}/confirm-paid") public Object markPaid(@PathVariable Long id){return service.view(service.confirmPaid(id));}
+}
