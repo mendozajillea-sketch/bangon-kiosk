@@ -42,12 +42,14 @@ public class AuthController {
         this.encoder = encoder;
 
         // Configure password authentication
-        DaoAuthenticationProvider provider =
-                new DaoAuthenticationProvider(users);
+       
+    DaoAuthenticationProvider provider =
+        new DaoAuthenticationProvider(encoder);
 
-        provider.setPasswordEncoder(encoder);
+provider.setUserDetailsService(users);
 
-        this.auth = new ProviderManager(provider);
+this.auth = new ProviderManager(provider);
+
     }
 
     // CSRF token
