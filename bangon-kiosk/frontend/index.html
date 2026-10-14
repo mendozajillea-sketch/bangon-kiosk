@@ -383,6 +383,11 @@
   .pay-option small{display:block;color:var(--muted);font-weight:500;margin-top:5px}
   .loyalty-box{margin:20px 0;padding:15px;border-radius:14px;background:#faf7f3;border:1px solid var(--border)}
   .loyalty-row{display:flex;justify-content:space-between;align-items:center;gap:14px}
+  .loyalty-link{border:0;background:transparent;color:var(--brown-700);font-weight:800;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:3px 0;text-align:left}
+  .loyalty-link:hover,.loyalty-link:focus-visible{color:var(--caramel-dark)}
+  .loyalty-balance{font-size:34px;font-weight:900;color:var(--brown-900);margin:12px 0 4px}
+  .loyalty-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+  .loyalty-notice{background:var(--cream);border-radius:12px;padding:12px;margin-top:14px;font-size:13px;line-height:1.55}
   .place-order{width:100%;border:0;border-radius:14px;padding:15px;background:var(--brown-900);color:#fff;font-weight:900;cursor:pointer}
   .confirmation{
     min-height:100vh;display:grid;place-items:center;padding:30px;background:var(--cream);
@@ -429,6 +434,13 @@
     .simple-screen{padding:20px 14px}
   }
 
+  /* Order history */
+  .history-list{display:grid;gap:13px;margin-top:22px}
+  .history-order{background:#fff;border:1px solid var(--border);border-radius:16px;padding:18px}
+  .history-top{display:flex;justify-content:space-between;align-items:start;gap:14px;flex-wrap:wrap}
+  .history-details{margin-top:10px;color:var(--muted);font-size:13px;line-height:1.6}
+  .history-state{font-size:12px;font-weight:800;background:var(--cream);border-radius:99px;padding:5px 10px}
+  .history-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
   /* Accessible authentication and profile dialogs */
   .auth-backdrop{position:fixed;inset:0;background:rgba(30,20,16,.65);z-index:100;display:none;align-items:center;justify-content:center;padding:16px}
   .auth-backdrop.show{display:flex}
@@ -478,6 +490,34 @@
   }
 
 
+
+/* Bangon wellness experience */
+.health-card{background:#faf7f2;border:1px solid var(--border);padding:15px;border-radius:16px;margin:14px 0}
+.health-card h4{margin:0 0 10px;color:var(--brown-900)}
+.health-meter{margin:12px 0}
+.health-meter-head{display:flex;justify-content:space-between;gap:10px;font-size:12px;margin-bottom:7px}
+.health-track{height:9px;border-radius:30px;background:#e7ded4;overflow:hidden}
+.health-fill{display:block;height:100%;width:0;background:#698d74;border-radius:30px;transition:width .2s}
+.health-fill.over{background:#aa5b40}.health-fill.near{background:#c69546}
+.health-caption{font-size:11px;color:var(--muted);line-height:1.5;margin-top:7px}
+.wellness-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
+.wellness-actions button{border:1px solid #cdbfb3;border-radius:11px;background:white;color:var(--brown-900);padding:9px 13px;cursor:pointer;font-weight:700;font-size:12px}
+.health-panel-body{max-height:66vh;overflow-y:auto;padding-right:4px}
+.health-panel-body h3{font-size:15px;margin:20px 0 6px;color:var(--brown-900)}
+.health-lede{font-size:13px;color:var(--muted);line-height:1.55}
+.health-panel-body .form-field{margin-top:12px}
+.health-panel-body .form-field input[type=checkbox]{width:auto;vertical-align:middle;margin:0 8px 0 0}
+.health-panel-body .form-field small{font-weight:400;font-size:11px;color:var(--muted)}
+.health-footer{display:flex;gap:9px;margin-top:14px}
+.health-footer .btn{flex:1}
+.health-simple{padding:12px 14px;border-radius:12px;background:var(--cream);font-size:12px;line-height:1.6;color:var(--brown-700)}
+.health-feedback{margin-top:10px;font-size:12px;line-height:1.5}
+.health-feedback:empty{display:none}
+.health-chip{font-size:11px;font-weight:700;border:1px solid #d8c9b9;border-radius:20px;padding:5px 9px;background:#fff}
+.catalog-filters{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 17px}
+.catalog-filters button{border:1px solid var(--border);background:#fff;padding:8px 11px;border-radius:99px;color:var(--brown-700);font-size:12px;cursor:pointer}
+.catalog-filters button.active{background:var(--brown-900);color:#fff}
+@media(max-width:760px){.health-footer{flex-direction:column}.health-panel-body{max-height:60vh}}
 </style>
 </head>
 <body>
@@ -516,6 +556,7 @@
         <div class="header-note" id="loginStatus">Guest order</div>
       </div>
       <div class="header-actions">
+        <button class="cart-button" id="historyButton" onclick="openOrderHistory()" style="display:none">Order History</button>
         <button class="cart-button" id="accountButton" onclick="accountAction()">Account</button>
         <button class="cart-button" onclick="focusCart()">Cart <span id="headerCartCount" class="cart-count">0</span></button>
       </div>
@@ -533,7 +574,7 @@
           <div class="profile-line">Calorie goal: <span id="sideCalorieGoal">2,000</span> kcal</div>
           <div class="profile-line">Lactose intolerance: <span id="sideLactose">Not set</span></div>
           <div class="profile-actions"><button class="link-button" onclick="openProfileSettings()">Edit preferences</button></div>
-          <div class="profile-line">Loyalty points: <span id="sidePoints">120</span></div>
+          <div class="profile-line"><button type="button" class="loyalty-link" onclick="openLoyalty()">Loyalty points: <span id="sidePoints">0</span> ↗</button></div>
         </div>
       </aside>
 
@@ -546,6 +587,11 @@
           <input id="searchInput" class="search" type="search" placeholder="Search drinks or pastries" oninput="renderProducts()">
         </div>
 
+        <div class="catalog-filters" role="group" aria-label="Nutrition filters">
+          <button type="button" id="filterAll" class="active" onclick="setNutritionFilter('all')">All drinks</button>
+          <button type="button" id="filterCaffeine" onclick="setNutritionFilter('caffeine')">Lower caffeine ≤ 80 mg</button>
+          <button type="button" id="filterCalories" onclick="setNutritionFilter('calories')">Lower calorie ≤ 150 kcal</button>
+        </div>
         <div class="product-grid" id="productGrid"></div>
         <div class="image-credit">
           Menu photos are loaded from online photo sources and require an internet connection.
@@ -558,7 +604,14 @@
           <span id="itemCountText">0 items</span>
         </div>
 
-        <div id="healthNotices"></div>
+        <div class="health-card" aria-live="polite">
+          <h4>Today's order · nutrition estimate</h4>
+          <div class="health-meter"><div class="health-meter-head"><span>Caffeine</span><strong id="cartCaffeineMeter">0 / 400 mg</strong></div><div class="health-track"><span class="health-fill" id="cartCaffeineFill"></span></div></div>
+          <div class="health-meter"><div class="health-meter-head"><span>Calories</span><strong id="cartCalorieMeter">0 / 2,000 kcal</strong></div><div class="health-track"><span class="health-fill" id="cartCalorieFill"></span></div></div>
+          <div class="health-caption" id="cartNutritionNote">Cart estimates only; this is not a record of what you've consumed.</div>
+          <div class="wellness-actions"><button type="button" onclick="openProfileSettings()">⚙ Health preferences</button></div>
+        </div>
+        <div id="healthNotices" aria-live="polite"></div>
         <div id="cartItems" class="cart-items"></div>
 
         <div class="summary">
@@ -581,7 +634,7 @@
         <h2>Checkout</h2>
         <p class="sub">Review your total and choose how you would like to pay.</p>
 
-        <div class="summary-line total"><span>Order total</span><span id="checkoutTotal">₱0.00</span></div>
+        <div id="checkoutHealth" aria-live="polite"></div><div class="summary-line total"><span>Order total</span><span id="checkoutTotal">₱0.00</span></div>
 
         <h3 style="margin-top:26px">Payment method</h3>
         <div class="payment-grid">
@@ -602,8 +655,8 @@
         <div class="loyalty-box">
           <div class="loyalty-row">
             <div>
-              <strong>Loyalty points</strong>
-              <div style="font-size:13px;color:var(--muted);margin-top:4px">You have <span id="checkoutPoints">120</span> points.</div>
+              <button type="button" class="loyalty-link" onclick="openLoyalty()">Loyalty points ⓘ</button>
+              <div style="font-size:13px;color:var(--muted);margin-top:4px">You have <span id="checkoutPoints">0</span> points.</div>
             </div>
             <label style="font-size:13px;font-weight:800">
               <input id="usePoints" type="checkbox" onchange="renderCheckout()"> Use 100 points
@@ -633,9 +686,20 @@
       </div>
 
       <p style="color:var(--muted)">Thank you for ordering at Bangon.</p>
-      <button class="btn btn-primary" onclick="newOrder()">Start New Order</button>
+      <div class="history-actions" style="justify-content:center"><button class="btn btn-primary" onclick="newOrder()">Start New Order</button><button class="btn btn-secondary" id="confirmationHistory" onclick="openOrderHistory()" style="display:none">View Order History</button></div>
     </div>
   </div>
+</section>
+
+<section id="historyScreen" class="screen">
+  <div class="simple-screen"><div class="simple-wrap">
+    <button class="back-link" onclick="showScreen('menuScreen')">← Back to menu</button>
+    <div class="simple-card">
+      <div class="history-top"><div><h2>My Order History</h2><p class="sub" style="margin-bottom:0">Orders saved to your account, including their payment status.</p></div>
+        <button type="button" class="btn btn-secondary" onclick="loadOrderHistory()">Refresh history</button></div>
+      <div id="historyList" class="history-list" aria-live="polite"><div class="empty">Loading orders…</div></div>
+    </div>
+  </div></div>
 </section>
 
 <div id="customModal" class="modal">
@@ -692,7 +756,7 @@
         <div><strong>Calories:</strong> <span id="modalCalories">0</span> kcal</div>
         <div class="price-live" id="modalPrice">₱0.00</div>
       </div>
-      <div id="allergenMessage" style="margin-top:12px"></div>
+      <div id="allergenMessage" style="margin-top:12px"></div><div id="customHealthAdvice" class="health-feedback" aria-live="polite"></div>
     </div>
 
     <div class="modal-actions">
@@ -717,17 +781,37 @@
     <div class="status-banner">Accounts require the Bangon Spring Boot server. Open the kiosk at <strong>http://localhost:8080/</strong>, not Live Server on port 5500.</div>
   </div>
 </div>
-<div id="profileBackdrop" class="auth-backdrop" role="dialog" aria-modal="true" aria-labelledby="profileTitle" onclick="if(event.target===this)closeProfileSettings()">
+<div id="loyaltyBackdrop" class="auth-backdrop" role="dialog" aria-modal="true" aria-labelledby="loyaltyTitle" onclick="if(event.target===this)closeLoyalty()">
   <div class="auth-card">
-    <div class="auth-heading"><h2 id="profileTitle">Health preferences</h2><button type="button" class="close" aria-label="Close" onclick="closeProfileSettings()">×</button></div>
-    <p class="auth-muted">Your preferred limits are used for informational order warnings. Nutritional values are estimates.</p>
-    <form id="profileForm" onsubmit="saveProfileSettings(event)">
-      <label class="form-field">Daily caffeine limit (mg)<input id="editCaffeine" type="number" min="0" max="2000" step="1" required></label>
-      <label class="form-field">Daily calorie goal (kcal)<input id="editCalories" type="number" min="0" max="10000" step="1" required></label>
-      <label class="form-field"><input id="editLactose" type="checkbox" style="width:auto;display:inline;margin-right:8px">I am lactose intolerant</label>
-      <div id="profileError" class="form-alert" role="alert" aria-live="polite"></div>
-      <button id="profileSave" class="btn btn-primary auth-submit" type="submit">Save preferences</button>
-    </form>
+    <div class="auth-heading"><h2 id="loyaltyTitle">My loyalty points</h2><button type="button" class="close" aria-label="Close" onclick="closeLoyalty()">×</button></div>
+    <p class="auth-muted">Earn rewards on eligible purchases and redeem points when checking out.</p>
+    <div class="loyalty-balance"><span id="loyaltyBalance">0</span> <span style="font-size:16px">points</span></div>
+    <div id="loyaltyNotice" class="loyalty-notice" aria-live="polite"></div>
+    <div class="loyalty-actions">
+      <button type="button" class="btn btn-primary" id="loyaltyGoCheckout" onclick="goToLoyaltyCheckout()">Go to checkout</button>
+      <button type="button" class="btn btn-secondary" onclick="closeLoyalty()">Close</button>
+    </div>
+  </div>
+</div>
+<div id="profileBackdrop" class="auth-backdrop" role="dialog" aria-modal="true" aria-labelledby="profileTitle" onclick="if(event.target===this)closeProfileSettings()">
+  <div class="auth-card" style="max-width:630px">
+    <div class="auth-heading"><h2 id="profileTitle">☕ My health preferences</h2><button type="button" class="close" aria-label="Close preferences" onclick="closeProfileSettings()">×</button></div>
+    <p class="health-lede">Make every cup fit your preferences. We’ll suggest smaller or lower-caffeine choices when your cart approaches your targets.</p>
+    <div class="health-panel-body">
+      <div class="health-card"><h4>Current order at a glance</h4><div id="profileOrderSnapshot" class="health-caption">No drinks in your cart.</div></div>
+      <form id="profileForm" onsubmit="saveProfileSettings(event)">
+        <h3>Daily nutrition targets</h3>
+        <label class="form-field">Caffeine limit · mg<input id="editCaffeine" type="number" min="0" max="2000" step="1" required><small>400 mg/day is a general reference for many healthy adults, not an appropriate target for everyone.</small></label>
+        <label class="form-field">Calorie goal · kcal<input id="editCalories" type="number" min="0" max="10000" step="1" required><small>Your goal is personal. Cart calories are only part of your daily intake.</small></label>
+        <h3>Dietary preferences</h3>
+        <label class="form-field"><input id="editLactose" type="checkbox">I am lactose intolerant</label>
+        <div class="health-simple">If you choose whole milk, we’ll suggest oat or almond milk. Other dairy ingredients, including whipped cream, may still be present. These are not verified allergen-safe alternatives.</div>
+        <h3>How it works</h3>
+        <div class="health-simple">Warnings appear as you customize drinks, add items and check out. They are advisory and do not prevent checkout. Sugar grams, actual consumption and ingredient-level allergen verification are not available in this version.</div>
+        <div id="profileError" class="form-alert" role="alert" aria-live="polite"></div>
+        <div class="health-footer"><button type="button" class="btn btn-secondary" onclick="resetHealthForm()">Reset fields</button><button id="profileSave" class="btn btn-primary" type="submit">Save preferences</button></div>
+      </form>
+    </div>
   </div>
 </div>
 <script>
@@ -750,6 +834,7 @@ let activeCategory = "Coffee";
 let cart = [];
 let selectedProduct = null;
 let paymentMethod = "Cash";
+let nutritionFilter = "all";
 
 function money(v){ return "₱" + Number(v).toFixed(2); }
 
@@ -824,11 +909,36 @@ function renderProfile(){
   document.getElementById('sideCalorieGoal').textContent=Number(profile.calorieGoal).toLocaleString();
   document.getElementById('sideLactose').textContent=profile.loggedIn?(profile.lactoseIntolerant?'Yes':'No'):'Sign in to configure';
   document.getElementById('accountButton').textContent=profile.loggedIn?'Sign out':'Sign in';
+  document.getElementById('historyButton').style.display=profile.loggedIn?'':'none';
+  document.getElementById('confirmationHistory').style.display=profile.loggedIn?'':'none';
   document.querySelector('.profile-actions button').textContent=profile.loggedIn?'Edit preferences':'Sign in to set limits';
+}
+function openLoyalty(){
+  document.getElementById('loyaltyBalance').textContent=Number(profile.points||0).toLocaleString();
+  const note=document.getElementById('loyaltyNotice');
+  const checkout=document.getElementById('loyaltyGoCheckout');
+  if(!profile.loggedIn){
+    note.textContent='Sign in to view your points and unlock loyalty rewards. Guest orders do not earn points.';
+    checkout.textContent='Sign in';checkout.disabled=false;
+  }else{
+    const available=Number(profile.points||0);
+    note.textContent=available>=100
+      ? 'You can redeem 100 points for ₱20 off an eligible order at checkout. Select “Use 100 points” before placing your order.'
+      : `Earn ${100-available} more points to unlock ₱20 off. Points are credited only after staff verifies payment.`;
+    checkout.textContent='Go to checkout';checkout.disabled=!cart.length;
+    if(!cart.length)note.textContent+=' Add items to your cart before proceeding to checkout.';
+  }
+  document.getElementById('loyaltyBackdrop').classList.add('show');
+}
+function closeLoyalty(){document.getElementById('loyaltyBackdrop').classList.remove('show');}
+function goToLoyaltyCheckout(){
+  closeLoyalty();
+  if(!profile.loggedIn){openAuth('login');return;}
+  if(cart.length)openCheckout();
 }
 function accountAction(){if(profile.loggedIn)logoutCustomer();else openAuth('login');}
 async function logoutCustomer(){
-  try{await api('/api/auth/logout',{method:'POST'});profile.loggedIn=false;await loadProfile();renderCart();}
+  try{await api('/api/auth/logout',{method:'POST'});profile.loggedIn=false;cart=[];await loadProfile();renderCart();}
   catch(e){alert(e.message);}
 }
 function openProfileSettings(){
@@ -836,8 +946,16 @@ function openProfileSettings(){
   document.getElementById('editCaffeine').value=profile.caffeineLimit;
   document.getElementById('editCalories').value=profile.calorieGoal;
   document.getElementById('editLactose').checked=profile.lactoseIntolerant;
+  const t=totals();
+  document.getElementById('profileOrderSnapshot').textContent=`${cart.length} items · ${t.caffeine} mg caffeine · ${t.calories} kcal. Based on current cart, not daily intake.`;
   document.getElementById('profileError').textContent='';
   document.getElementById('profileBackdrop').classList.add('show');
+}
+function resetHealthForm(){
+  document.getElementById('editCaffeine').value=400;
+  document.getElementById('editCalories').value=2000;
+  document.getElementById('editLactose').checked=false;
+  document.getElementById('profileError').textContent='Defaults loaded. Click Save preferences to store them.';
 }
 function closeProfileSettings(){document.getElementById('profileBackdrop').classList.remove('show');}
 async function saveProfileSettings(event){
@@ -916,11 +1034,17 @@ function setCategory(category){
   renderProducts();
 }
 
+function setNutritionFilter(type){
+  nutritionFilter=type;
+  ['all','caffeine','calories'].forEach(k=>document.getElementById('filter'+k[0].toUpperCase()+k.slice(1)).classList.toggle('active',nutritionFilter===k));
+  renderProducts();
+}
 function renderProducts(){
   const q = (document.getElementById("searchInput")?.value || "").toLowerCase().trim();
   const list = products.filter(p =>
     p.category === activeCategory &&
-    (!q || p.name.toLowerCase().includes(q))
+    (!q || p.name.toLowerCase().includes(q)) &&
+    (nutritionFilter==='all' || (nutritionFilter==='caffeine' && Number(p.caffeine)<=80) || (nutritionFilter==='calories' && Number(p.calories)<=150))
   );
 
   document.getElementById("productGrid").innerHTML = list.map(p => `
@@ -1018,6 +1142,17 @@ async function updateCustomization(){
   document.getElementById("modalPrice").textContent = money(v.price);
   document.getElementById("modalCaffeine").textContent = v.caffeine;
   document.getElementById("modalCalories").textContent = v.calories;
+  const choice=currentChoices();
+  const projected={caffeine:totals().caffeine+Number(v.caffeine),calories:totals().calories+Number(v.calories)};
+  const advice=[];
+  if(profile.loggedIn){
+    if(projected.caffeine>profile.caffeineLimit)advice.push('Adding this drink would exceed your preferred caffeine limit. Try a small size or remove the extra espresso shot.');
+    else if(profile.caffeineLimit>0&&projected.caffeine>=profile.caffeineLimit*.8)advice.push('This drink brings your cart near your caffeine target.');
+    if(projected.calories>profile.calorieGoal)advice.push('Adding this drink would exceed your calorie goal. Consider fewer add-ons or a smaller size.');
+    else if(profile.calorieGoal>0&&projected.calories>=profile.calorieGoal*.8)advice.push('Your selected drinks are approaching your calorie goal.');
+    if(profile.lactoseIntolerant && (choice.milk==='whole'||choice.cream))advice.push('This selection may contain dairy. Switch whole milk to oat/almond and remove whipped cream if appropriate. Confirm ingredients with staff.');
+  }
+  document.getElementById('customHealthAdvice').innerHTML=advice.map(x=>`<div class="notice warn">${escapeText(x)}</div>`).join('');
 
   const box = document.getElementById("allergenMessage");
   if(profile.loggedIn && profile.lactoseIntolerant && currentChoices().milk==="whole"){
@@ -1052,6 +1187,7 @@ async function addCustomizedItem(){
 
   closeCustomize();
   renderCart();
+  focusCart();
 }
 
 function removeCartItem(index){
@@ -1096,28 +1232,67 @@ function renderCart(){
   }
 
   renderHealthNotices(t);
+  updateNutritionMeters(t);
 }
 
+function updateNutritionMeters(t){
+  [["Caffeine",t.caffeine,profile.caffeineLimit,"mg"],["Calorie",t.calories,profile.calorieGoal,"kcal"]].forEach(([label,val,limit,unit])=>{
+    document.getElementById('cart'+label+'Meter').textContent=`${val.toLocaleString()} / ${Number(limit).toLocaleString()} ${unit}`;
+    const fill=document.getElementById('cart'+label+'Fill');
+    const fraction=Number(limit)>0?val/limit:(val>0?1:0);
+    fill.style.width=Math.min(100,fraction*100)+'%';
+    fill.className='health-fill'+(fraction>1?' over':fraction>=.8?' near':'');
+  });
+  document.getElementById('cartNutritionNote').textContent=profile.loggedIn?'Compared with your saved goals. Purchases are not verified as consumed.':'Guest estimates. Sign in to save your personal limits.';
+}
+function healthWarnings(t){
+  if(!profile.loggedIn)return [];
+  const result=[];
+  for(const [label,value,limit,unit] of [['caffeine',t.caffeine,profile.caffeineLimit,'mg'],['calories',t.calories,profile.calorieGoal,'kcal']]){
+    if(limit==null)continue;
+    if(value>limit)result.push(`Your cart contains ${value} ${unit} of ${label}, exceeding your preferred ${limit} ${unit} target. Consider a smaller serving or removing an add-on.`);
+    else if(limit>0 && value>=limit*.8)result.push(`Your cart is approaching your ${label} target (${value} of ${limit} ${unit}).`);
+  }
+  if(profile.lactoseIntolerant && cart.some(i=>i.choices?.milk==='whole'||i.choices?.cream))result.push('Dairy ingredient selected: whole milk or whipped cream. Consider oat/almond milk and removing whipped cream; check all ingredients with staff.');
+  return result;
+}
 function renderHealthNotices(t){
-  if(!profile.loggedIn){
-    document.getElementById("healthNotices").innerHTML = "";
-    return;
-  }
+  const notices=healthWarnings(t);
+  document.getElementById('healthNotices').innerHTML=notices.map(x=>`<div class="notice warn">${escapeText(x)}</div>`).join('');
+}
 
-  const notices = [];
-  // These are order estimates unless a verified daily consumption ledger is added on the backend.
-  const caffeineAfter = t.caffeine;
-  const caloriesAfter = t.calories;
-
-  if(caffeineAfter > profile.caffeineLimit){
-    notices.push(`<div class="notice warn">This order contains ${caffeineAfter} mg caffeine, above your ${profile.caffeineLimit} mg preferred limit. Past consumption is not tracked.</div>`);
-  }
-
-  if(caloriesAfter > profile.calorieGoal){
-    notices.push(`<div class="notice warn">This order contains ${caloriesAfter} kcal, above your ${profile.calorieGoal} kcal preferred goal. Past consumption is not tracked.</div>`);
-  }
-
-  document.getElementById("healthNotices").innerHTML = notices.join("");
+function escapeText(value){
+  return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+async function openOrderHistory(){
+  if(!profile.loggedIn){openAuth('login');return;}
+  showScreen('historyScreen');
+  await loadOrderHistory();
+}
+async function loadOrderHistory(){
+  const el=document.getElementById('historyList');
+  if(!profile.loggedIn){el.innerHTML='<div class="empty">Sign in to see your order history.</div>';return;}
+  el.innerHTML='<div class="empty">Loading your orders…</div>';
+  try{
+    const response=await api('/api/customers/me/orders');
+    const records=Array.isArray(response)?response:(Array.isArray(response.content)?response.content:Array.isArray(response.orders)?response.orders:null);
+    if(!records)throw new Error('Unexpected order history response. The backend API may use a different format.');
+    if(!records.length){el.innerHTML='<div class="empty">You have no orders yet. Your completed orders will appear here.</div>';return;}
+    el.innerHTML=records.map(o=>{
+      const number=escapeText(o.orderNumber??o.id??'—');
+      const status=escapeText(o.paymentStatus??o.status??'Pending');
+      const dateValue=o.createdAt??o.orderedAt??o.createdDate??o.orderDate;
+      const date=dateValue?new Date(dateValue):null;
+      const dateText=date&&!isNaN(date.getTime())?date.toLocaleString():'';
+      const amount=o.total??o.totalAmount??o.grandTotal;
+      const items=Array.isArray(o.items)?o.items:Array.isArray(o.orderItems)?o.orderItems:[];
+      const itemText=items.length?items.map(i=>{
+        const name=i.productName??i.name??i.product?.name??'Item';
+        return escapeText(name)+' × '+escapeText(i.quantity??1);
+      }).join(', '):'Order details available from your receipt';
+      return `<article class="history-order"><div class="history-top"><div><strong>Order #${number}</strong><div class="history-details">${escapeText(dateText)}</div></div><span class="history-state">${status}</span></div><div class="history-details">${itemText}</div><div style="margin-top:12px;font-weight:800">${amount==null?'':money(amount)}</div></article>`;
+    }).join('');
+  }catch(e){el.textContent='Unable to load your order history: '+e.message;}
 }
 
 function focusCart(){
@@ -1130,6 +1305,8 @@ function openCheckout(){
     return;
   }
   document.getElementById("usePoints").checked = false;
+  const warnings=healthWarnings(totals());
+  document.getElementById('checkoutHealth').innerHTML=warnings.length?'<div class="health-card"><h4>Review your health preferences</h4>'+warnings.map(x=>`<div class="notice warn">${escapeText(x)}</div>`).join('')+'<p class="health-caption">These are estimates. You can still continue checkout.</p></div>':'';
   renderCheckout();
   showScreen("checkoutScreen");
 }
@@ -1147,7 +1324,9 @@ function renderCheckout(){
   document.getElementById("checkoutTotal").textContent = money(Math.max(0,t.price-discount));
   document.getElementById("checkoutPoints").textContent = profile.points;
   document.getElementById("loyaltyHint").textContent =
-    profile.points >= 100 ? "Use 100 points for ₱20 off." : "You need 100 points to redeem a discount.";
+    !profile.loggedIn ? "Sign in to redeem loyalty points." :
+    profile.points >= 100 ? "Choose the checkbox to redeem 100 points for ₱20 off." :
+    `Earn ${100-Number(profile.points||0)} more points to redeem ₱20 off.`;
   document.getElementById("usePoints").disabled = !profile.loggedIn || profile.points < 100;
 }
 
@@ -1164,6 +1343,8 @@ async function placeOrder(){
     document.getElementById('earnedPoints').textContent=order.pointsEarned+' (after verified payment)';
     document.querySelector('#confirmationScreen h2').textContent='Order placed — payment pending';
     document.querySelector('#confirmationScreen .confirmation-card > p').textContent='Present your order number at the counter. Card and e-wallet payments require payment-provider verification.';
+    // The backend has accepted this order; it is no longer an active cart.
+    cart=[];renderCart();
     await loadProfile();showScreen('confirmationScreen');
   }catch(e){alert('Could not place order: '+e.message);}
   finally{btn.disabled=false;btn.textContent='PLACE ORDER';}
