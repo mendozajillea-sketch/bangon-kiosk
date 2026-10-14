@@ -428,8 +428,31 @@
     .header{padding:0 14px}
     .simple-screen{padding:20px 14px}
   }
-</style>
-<style>
+
+  /* Accessible authentication and profile dialogs */
+  .auth-backdrop{position:fixed;inset:0;background:rgba(30,20,16,.65);z-index:100;display:none;align-items:center;justify-content:center;padding:16px}
+  .auth-backdrop.show{display:flex}
+  .auth-card{width:min(440px,100%);max-height:94vh;overflow:auto;background:white;border-radius:22px;padding:28px;box-shadow:0 30px 75px #0004}
+  .auth-heading{display:flex;align-items:start;justify-content:space-between;gap:12px}
+  .auth-heading h2{font-family:Georgia,serif;font-size:30px;color:var(--brown-900);margin:0}
+  .auth-muted{font-size:13px;line-height:1.5;color:var(--muted);margin:10px 0 20px}
+  .form-field{display:block;margin:14px 0;color:var(--brown-800);font-size:13px;font-weight:750}
+  .form-field input{display:block;width:100%;margin-top:6px;padding:12px;border:1px solid var(--border);border-radius:11px;color:var(--text);background:white}
+  .form-field input:focus{outline:2px solid #c69572;outline-offset:1px}
+  .auth-submit{width:100%;margin-top:14px}
+  .auth-submit:disabled{opacity:.65;cursor:wait}
+  .auth-switch{margin-top:18px;text-align:center;font-size:13px;color:var(--muted)}
+  .link-button{border:0;background:transparent;color:var(--caramel-dark);font-weight:800;cursor:pointer;text-decoration:underline;padding:5px}
+  .form-alert{padding:12px;border-radius:11px;margin-top:14px;font-size:13px;line-height:1.5;background:#fbefed;color:#873d35;border:1px solid #e8c5bf}
+  .form-alert:empty{display:none}
+  .profile-actions{margin-top:12px}
+  .profile-summary button{font-size:12px}
+  .status-banner{margin:10px 0;padding:12px;border-radius:10px;background:#fff3dd;color:#704a17;font-size:13px;line-height:1.5}
+  .status-banner:empty{display:none}
+  .hidden{display:none!important}
+  @media(max-width:760px){.sidebar .profile-summary{display:block;min-width:215px;margin:0}.auth-card{padding:20px}}
+
+
   .welcome-visual .table,
   .welcome-visual .saucer,
   .welcome-visual .cup-visual{display:none!important}
@@ -453,6 +476,8 @@
     color:#93877f;
     line-height:1.5;
   }
+
+
 </style>
 </head>
 <body>
@@ -471,7 +496,7 @@
 
       <div class="welcome-actions">
         <button class="btn btn-primary" onclick="startOrder()">Start Order</button>
-        <button class="btn btn-secondary" onclick="loginDemo()">Login</button>
+        <button class="btn btn-secondary" onclick="openAuth('login')">Login / Register</button>
       </div>
     </div>
 
@@ -491,6 +516,7 @@
         <div class="header-note" id="loginStatus">Guest order</div>
       </div>
       <div class="header-actions">
+        <button class="cart-button" id="accountButton" onclick="accountAction()">Account</button>
         <button class="cart-button" onclick="focusCart()">Cart <span id="headerCartCount" class="cart-count">0</span></button>
       </div>
     </header>
@@ -503,8 +529,10 @@
         <div class="profile-summary">
           <small>Signed-in profile</small>
           <strong id="profileName">Guest</strong>
-          <div class="profile-line">Caffeine limit: 400 mg</div>
-          <div class="profile-line">Calorie goal: 2,000 kcal</div>
+          <div class="profile-line">Caffeine limit: <span id="sideCaffeineLimit">400</span> mg</div>
+          <div class="profile-line">Calorie goal: <span id="sideCalorieGoal">2,000</span> kcal</div>
+          <div class="profile-line">Lactose intolerance: <span id="sideLactose">Not set</span></div>
+          <div class="profile-actions"><button class="link-button" onclick="openProfileSettings()">Edit preferences</button></div>
           <div class="profile-line">Loyalty points: <span id="sidePoints">120</span></div>
         </div>
       </aside>
@@ -596,12 +624,12 @@
       <div class="checkmark">✓</div>
       <h2>Order confirmed</h2>
       <div class="order-number" id="orderNumber">Order #B102</div>
-      <p style="color:var(--muted)">Preparation begins once payment is verified.</p>
+      <p style="color:var(--muted)">Estimated preparation time: <strong>8–10 minutes</strong></p>
 
       <div class="receipt">
         <div class="summary-line"><span>Total paid</span><strong id="paidAmount">₱0.00</strong></div>
         <div class="summary-line"><span>Payment</span><strong id="paidMethod">Cash</strong></div>
-        <div class="summary-line"><span>Points to earn</span><strong id="earnedPoints">0</strong></div>
+        <div class="summary-line"><span>Points earned</span><strong id="earnedPoints">0</strong></div>
       </div>
 
       <p style="color:var(--muted)">Thank you for ordering at Bangon.</p>
@@ -674,6 +702,34 @@
   </div>
 </div>
 
+<div id="authBackdrop" class="auth-backdrop" role="dialog" aria-modal="true" aria-labelledby="authTitle" onclick="if(event.target===this)closeAuth()">
+  <div class="auth-card">
+    <div class="auth-heading"><h2 id="authTitle">Welcome back</h2><button type="button" class="close" aria-label="Close" onclick="closeAuth()">×</button></div>
+    <p id="authSubtitle" class="auth-muted">Sign in to access loyalty points and your dietary preferences.</p>
+    <form id="authForm" onsubmit="submitAuth(event)">
+      <label class="form-field hidden" id="nameField">Full name<input id="authName" type="text" autocomplete="name" minlength="2" maxlength="100"></label>
+      <label class="form-field">Email address<input id="authEmail" type="email" autocomplete="email" required maxlength="254" placeholder="you@example.com"></label>
+      <label class="form-field">Password<input id="authPassword" type="password" autocomplete="current-password" required minlength="8" placeholder="At least 8 characters"></label>
+      <div id="authError" class="form-alert" role="alert" aria-live="polite"></div>
+      <button id="authSubmit" class="btn btn-primary auth-submit" type="submit">Sign in</button>
+    </form>
+    <div class="auth-switch"><span id="authSwitchText">New to Bangon?</span> <button type="button" id="authSwitch" class="link-button" onclick="toggleAuth()">Create an account</button></div>
+    <div class="status-banner">Accounts require the Bangon Spring Boot server. Open the kiosk at <strong>http://localhost:8080/</strong>, not Live Server on port 5500.</div>
+  </div>
+</div>
+<div id="profileBackdrop" class="auth-backdrop" role="dialog" aria-modal="true" aria-labelledby="profileTitle" onclick="if(event.target===this)closeProfileSettings()">
+  <div class="auth-card">
+    <div class="auth-heading"><h2 id="profileTitle">Health preferences</h2><button type="button" class="close" aria-label="Close" onclick="closeProfileSettings()">×</button></div>
+    <p class="auth-muted">Your preferred limits are used for informational order warnings. Nutritional values are estimates.</p>
+    <form id="profileForm" onsubmit="saveProfileSettings(event)">
+      <label class="form-field">Daily caffeine limit (mg)<input id="editCaffeine" type="number" min="0" max="2000" step="1" required></label>
+      <label class="form-field">Daily calorie goal (kcal)<input id="editCalories" type="number" min="0" max="10000" step="1" required></label>
+      <label class="form-field"><input id="editLactose" type="checkbox" style="width:auto;display:inline;margin-right:8px">I am lactose intolerant</label>
+      <div id="profileError" class="form-alert" role="alert" aria-live="polite"></div>
+      <button id="profileSave" class="btn btn-primary auth-submit" type="submit">Save preferences</button>
+    </form>
+  </div>
+</div>
 <script>
 let categoryLabels = ["Coffee","Frappes","Tea","Pastries","Desserts"];
 
@@ -686,7 +742,7 @@ const profile = {
   calorieConsumedToday:0,
   caffeineLimit:400,
   calorieGoal:2000,
-  lactoseIntolerant:true,
+  lactoseIntolerant:false,
   points:0
 };
 
@@ -708,48 +764,142 @@ function startOrder(){
   loadMenu();
 }
 
-async function loginDemo(){
-  const email = prompt("Your email address (Cancel to register instead)");
-  if(email===null){ await registerMember(); return; }
-  const password = prompt("Password"); if(password===null)return;
-  try { await api('/api/auth/login',{method:'POST',body:JSON.stringify({email,password})}); await loadProfile(); startOrder(); }
-  catch(e){alert('Login failed: '+e.message);}
+let authMode='login';
+function openAuth(mode='login'){
+  authMode=mode;
+  const registering=mode==='register';
+  document.getElementById('authTitle').textContent=registering?'Create your account':'Welcome back';
+  document.getElementById('authSubtitle').textContent=registering?'Register to save dietary preferences and earn loyalty points.':'Sign in to access loyalty points and dietary preferences.';
+  document.getElementById('nameField').classList.toggle('hidden',!registering);
+  document.getElementById('authName').required=registering;
+  document.getElementById('authPassword').autocomplete=registering?'new-password':'current-password';
+  document.getElementById('authSubmit').textContent=registering?'Create account':'Sign in';
+  document.getElementById('authSwitchText').textContent=registering?'Already a member?':'New to Bangon?';
+  document.getElementById('authSwitch').textContent=registering?'Sign in':'Create an account';
+  document.getElementById('authError').textContent='';
+  document.getElementById('authError').style.display='';
+  document.getElementById('authBackdrop').classList.add('show');
+  document.getElementById('authEmail').focus();
 }
-async function registerMember(){
-  const name=prompt('Your name');if(!name)return;
-  const email=prompt('Your email');if(!email)return;
-  const password=prompt('Create password (at least 8 characters)');if(!password)return;
-  try{await api('/api/auth/register',{method:'POST',body:JSON.stringify({name,email,password})});alert('Registered. Please log in.');await loginDemo();}
-  catch(e){alert('Registration failed: '+e.message);}
+function closeAuth(){document.getElementById('authBackdrop').classList.remove('show');document.getElementById('authForm').reset();}
+function toggleAuth(){openAuth(authMode==='login'?'register':'login');}
+function loginDemo(){openAuth('login');}
+function registerMember(){openAuth('register');}
+async function submitAuth(event){
+  event.preventDefault();
+  const btn=document.getElementById('authSubmit');
+  const err=document.getElementById('authError');
+  const email=document.getElementById('authEmail').value.trim();
+  const password=document.getElementById('authPassword').value;
+  const payload=authMode==='register'?{name:document.getElementById('authName').value.trim(),email,password}:{email,password};
+  if(authMode==='register'&&payload.name.length<2){err.textContent='Please enter your full name.';return;}
+  btn.disabled=true;err.textContent='';
+  try{
+    await api(authMode==='register'?'/api/auth/register':'/api/auth/login',{method:'POST',body:JSON.stringify(payload)});
+    if(authMode==='register'){
+      openAuth('login');
+      document.getElementById('authEmail').value=email;
+      document.getElementById('authSubtitle').textContent='Account created! Please sign in.';
+    }else{
+      await loadProfile();closeAuth();await startOrder();
+    }
+  }catch(e){err.style.display='block';err.textContent=e.message;}
+  finally{btn.disabled=false;}
 }
 async function loadProfile(){
-  try{ const p=await api('/api/customers/me');Object.assign(profile,{loggedIn:true,name:p.name,points:p.points,caffeineLimit:p.caffeineLimit,calorieGoal:p.calorieGoal,lactoseIntolerant:p.lactoseIntolerant}); }
-  catch(e){profile.loggedIn=false;profile.name='Guest';profile.points=0;}
+  try{
+    const p=await api('/api/customers/me');
+    Object.assign(profile,{loggedIn:true,name:p.name,points:p.points??0,caffeineLimit:p.caffeineLimit??400,calorieGoal:p.calorieGoal??2000,lactoseIntolerant:!!p.lactoseIntolerant});
+  }catch(e){
+    profile.loggedIn=false;profile.name='Guest';profile.points=0;
+    profile.caffeineLimit=400;profile.calorieGoal=2000;profile.lactoseIntolerant=false;
+  }
+  renderProfile();
+}
+function renderProfile(){
+  document.getElementById('profileName').textContent=profile.name;
+  document.getElementById('loginStatus').textContent=profile.loggedIn?'Signed in as '+profile.name:'Guest order';
+  document.getElementById('sidePoints').textContent=profile.points;
+  document.getElementById('sideCaffeineLimit').textContent=profile.caffeineLimit;
+  document.getElementById('sideCalorieGoal').textContent=Number(profile.calorieGoal).toLocaleString();
+  document.getElementById('sideLactose').textContent=profile.loggedIn?(profile.lactoseIntolerant?'Yes':'No'):'Sign in to configure';
+  document.getElementById('accountButton').textContent=profile.loggedIn?'Sign out':'Sign in';
+  document.querySelector('.profile-actions button').textContent=profile.loggedIn?'Edit preferences':'Sign in to set limits';
+}
+function accountAction(){if(profile.loggedIn)logoutCustomer();else openAuth('login');}
+async function logoutCustomer(){
+  try{await api('/api/auth/logout',{method:'POST'});profile.loggedIn=false;await loadProfile();renderCart();}
+  catch(e){alert(e.message);}
+}
+function openProfileSettings(){
+  if(!profile.loggedIn){openAuth('login');return;}
+  document.getElementById('editCaffeine').value=profile.caffeineLimit;
+  document.getElementById('editCalories').value=profile.calorieGoal;
+  document.getElementById('editLactose').checked=profile.lactoseIntolerant;
+  document.getElementById('profileError').textContent='';
+  document.getElementById('profileBackdrop').classList.add('show');
+}
+function closeProfileSettings(){document.getElementById('profileBackdrop').classList.remove('show');}
+async function saveProfileSettings(event){
+  event.preventDefault();
+  const btn=document.getElementById('profileSave'), err=document.getElementById('profileError');
+  const values={caffeineLimit:Number(document.getElementById('editCaffeine').value),calorieGoal:Number(document.getElementById('editCalories').value),lactoseIntolerant:document.getElementById('editLactose').checked};
+  btn.disabled=true;err.textContent='';
+  try{
+    await api('/api/customers/me',{method:'PUT',body:JSON.stringify(values)});
+    await loadProfile();renderCart();closeProfileSettings();
+  }catch(e){err.textContent=e.message;}
+  finally{btn.disabled=false;}
 }
 let csrfToken='';
-async function api(path,options={}){
-  const method=options.method||'GET';
-  if(method!=='GET'&&!csrfToken) await csrf();
-  const response=await fetch(path,{...options,credentials:'same-origin',headers:{'Content-Type':'application/json',...(method!=='GET'?{'X-XSRF-TOKEN':csrfToken}:{}),...(options.headers||{})}});
-  const data=await response.json().catch(()=>({}));
-  if(!response.ok)throw new Error(data.error||('HTTP '+response.status));
+async function parseJsonResponse(response){
+  const raw=await response.text();
+  const type=response.headers.get('content-type')||'';
+  if(!type.toLowerCase().includes('application/json')){
+    if(raw.trim().startsWith('<')) throw new Error('The server returned HTML instead of API data. Run the Spring Boot backend and open http://localhost:8080/ (not Live Server :5500).');
+    throw new Error('API response was not JSON (HTTP '+response.status+'). Verify your backend is running.');
+  }
+  let data;
+  try{data=JSON.parse(raw);}catch(e){throw new Error('The server returned invalid JSON. Check backend logs.');}
+  if(!response.ok)throw new Error(data.error||data.message||('Request failed (HTTP '+response.status+')'));
   return data;
 }
-async function csrf(){const r=await fetch('/api/auth/csrf',{credentials:'same-origin'});const d=await r.json();csrfToken=d.token;}
-async function loadMenu(){
-  try{const [menu,categories]=await Promise.all([api('/api/products'),api('/api/categories')]);products=menu;categoryLabels=categories;await loadProfile();renderAll();}
-  catch(e){document.getElementById('categoryTitle').textContent='Cannot load menu';document.getElementById('productGrid').textContent='Backend unavailable: '+e.message;}
+async function csrf(){
+  let response;
+  try{response=await fetch('/api/auth/csrf',{credentials:'same-origin',headers:{Accept:'application/json'}});}
+  catch(e){throw new Error('Cannot reach the Bangon backend. Start Spring Boot and visit http://localhost:8080/.');}
+  const d=await parseJsonResponse(response);
+  if(!d.token)throw new Error('The backend did not provide a CSRF token.');
+  csrfToken=d.token;
 }
-
+async function api(path,options={}){
+  const method=(options.method||'GET').toUpperCase();
+  if(method!=='GET'&&!csrfToken)await csrf();
+  let response;
+  try{
+    response=await fetch(path,{...options,credentials:'same-origin',headers:{'Content-Type':'application/json',Accept:'application/json',...(method!=='GET'?{'X-XSRF-TOKEN':csrfToken}:{}),...(options.headers||{})}});
+  }catch(e){throw new Error('Cannot reach the Bangon backend. Start Spring Boot and visit http://localhost:8080/.');}
+  if(response.status===403&&method!=='GET')csrfToken='';
+  return parseJsonResponse(response);
+}
+async function loadMenu(){
+  try{
+    const [menu,categories]=await Promise.all([api('/api/products'),api('/api/categories')]);
+    if(!Array.isArray(menu)||!Array.isArray(categories))throw new Error('The menu API returned an unexpected format.');
+    products=menu;categoryLabels=categories;
+    await loadProfile();renderAll();
+  }catch(e){
+    document.getElementById('categoryTitle').textContent='Menu unavailable';
+    document.getElementById('productGrid').textContent=e.message;
+  }
+}
 function renderAll(){
   renderCategories();
   renderProducts();
   renderCart();
   document.getElementById("profileName").textContent = profile.name;
   document.getElementById("loginStatus").textContent = profile.loggedIn ? "Signed in" : "Guest order";
-  document.getElementById("sidePoints").textContent = profile.points;
-  document.querySelector(".profile-summary .profile-line:nth-of-type(1)").textContent = "Caffeine limit: " + profile.caffeineLimit + " mg";
-  document.querySelector(".profile-summary .profile-line:nth-of-type(2)").textContent = "Calorie goal: " + profile.calorieGoal + " kcal";
+  renderProfile();
 }
 
 function renderCategories(){
@@ -870,7 +1020,7 @@ async function updateCustomization(){
   document.getElementById("modalCalories").textContent = v.calories;
 
   const box = document.getElementById("allergenMessage");
-  if(profile.loggedIn && profile.lactoseIntolerant && v.milk==="whole"){
+  if(profile.loggedIn && profile.lactoseIntolerant && currentChoices().milk==="whole"){
     box.innerHTML = `<div class="notice alert">Your profile is marked lactose intolerant. You can switch to oat or almond milk.</div>`;
   }else if(profile.loggedIn && profile.lactoseIntolerant){
     box.innerHTML = `<div class="notice good">This milk choice matches your saved allergen preference.</div>`;
@@ -897,7 +1047,7 @@ async function addCustomizedItem(){
     price:v.price,
     caffeine:v.caffeine,
     calories:v.calories,
-    details:`${v.size.charAt(0).toUpperCase()+v.size.slice(1)} · ${milkLabel} milk · ${v.sweetness}% sweet${addOns.length ? " · "+addOns.join(", ") : ""}`
+    details:`${v.size.charAt(0).toUpperCase()+v.size.slice(1)} · ${milkLabel} milk · ${v.sweet}% sweet${addOns.length ? " · "+addOns.join(", ") : ""}`
   });
 
   closeCustomize();
@@ -955,15 +1105,16 @@ function renderHealthNotices(t){
   }
 
   const notices = [];
-  const caffeineAfter = profile.caffeineConsumedToday + t.caffeine;
-  const caloriesAfter = profile.calorieConsumedToday + t.calories;
+  // These are order estimates unless a verified daily consumption ledger is added on the backend.
+  const caffeineAfter = t.caffeine;
+  const caloriesAfter = t.calories;
 
   if(caffeineAfter > profile.caffeineLimit){
-    notices.push(`<div class="notice warn">This order would bring today's caffeine total to ${caffeineAfter} mg, above your ${profile.caffeineLimit} mg limit.</div>`);
+    notices.push(`<div class="notice warn">This order contains ${caffeineAfter} mg caffeine, above your ${profile.caffeineLimit} mg preferred limit. Past consumption is not tracked.</div>`);
   }
 
   if(caloriesAfter > profile.calorieGoal){
-    notices.push(`<div class="notice warn">This order would bring today's calorie total to ${caloriesAfter} kcal, above your ${profile.calorieGoal} kcal goal.</div>`);
+    notices.push(`<div class="notice warn">This order contains ${caloriesAfter} kcal, above your ${profile.calorieGoal} kcal preferred goal. Past consumption is not tracked.</div>`);
   }
 
   document.getElementById("healthNotices").innerHTML = notices.join("");
@@ -1026,7 +1177,7 @@ function newOrder(){
   showScreen("welcomeScreen");
 }
 
-loadMenu();
+renderProfile();
 renderCart();
 </script>
 </body>
