@@ -518,6 +518,32 @@
 .catalog-filters button{border:1px solid var(--border);background:#fff;padding:8px 11px;border-radius:99px;color:var(--brown-700);font-size:12px;cursor:pointer}
 .catalog-filters button.active{background:var(--brown-900);color:#fff}
 @media(max-width:760px){.health-footer{flex-direction:column}.health-panel-body{max-height:60vh}}
+
+/* Modal usability corrections: scoped to account and health dialogs. */
+.auth-backdrop{overflow-y:auto;overscroll-behavior:contain;padding:clamp(12px,3vh,24px)}
+.auth-backdrop.show{align-items:center}
+.auth-card{box-sizing:border-box;min-width:0;max-width:100%;max-height:calc(100dvh - 32px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;}
+.auth-heading{align-items:center;min-width:0}
+.auth-heading h2{min-width:0;overflow-wrap:break-word;font-size:clamp(23px,5vw,30px);line-height:1.2}
+.auth-heading .close{flex:0 0 36px;min-width:36px;min-height:36px;display:grid;place-items:center}
+.auth-card .form-field{min-width:0}
+.auth-card .form-field input:not([type=checkbox]){max-width:100%;min-width:0}
+.password-control{position:relative;margin-top:6px}
+.auth-card .form-field .password-control input{margin-top:0;padding-right:52px}
+.password-toggle{position:absolute;top:50%;right:6px;transform:translateY(-50%);width:40px;height:40px;display:grid;place-items:center;border:0;border-radius:9px;background:transparent;color:var(--brown-700);cursor:pointer}
+.password-toggle:hover{background:var(--cream)}
+.password-toggle:focus-visible{outline:2px solid var(--caramel);outline-offset:1px}
+.password-toggle svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.field-error{display:block;margin-top:6px;color:var(--danger);font-size:12px;font-weight:600;line-height:1.4}
+.field-error:empty{display:none}
+.auth-card input[aria-invalid=true]{border-color:var(--danger);outline-color:var(--danger)}
+.health-panel-body{max-height:none;overflow:visible;padding-right:0;min-width:0}
+.health-panel-body .dietary-check{display:flex;align-items:center;gap:10px;width:fit-content;max-width:100%;padding:10px 2px;margin:6px 0 12px;cursor:pointer;font-size:14px;font-weight:500;line-height:1.4}
+.health-panel-body .dietary-check input[type=checkbox]{display:block;flex:0 0 19px;width:19px;height:19px;margin:0;accent-color:var(--brown-900);cursor:pointer}
+.health-panel-body .dietary-check span{display:block;min-width:0}
+.health-footer{flex-wrap:wrap}
+.health-footer .btn{min-width:0}
+@media(max-width:520px){.auth-backdrop{padding:10px;align-items:center}.auth-card{padding:20px 16px;max-height:calc(100dvh - 20px);border-radius:17px}.health-footer{flex-direction:column}.health-footer .btn{width:100%}}
 </style>
 </head>
 <body>
@@ -773,7 +799,8 @@
     <form id="authForm" onsubmit="submitAuth(event)">
       <label class="form-field hidden" id="nameField">Full name<input id="authName" type="text" autocomplete="name" minlength="2" maxlength="100"></label>
       <label class="form-field">Email address<input id="authEmail" type="email" autocomplete="email" required maxlength="254" placeholder="you@example.com"></label>
-      <label class="form-field">Password<input id="authPassword" type="password" autocomplete="current-password" required minlength="8" placeholder="At least 8 characters"></label>
+      <div class="form-field"><label for="authPassword">Password</label><div class="password-control"><input id="authPassword" type="password" autocomplete="current-password" oninput="if(authMode==='register')validatePasswordMatch()" required minlength="8" placeholder="At least 8 characters"><button class="password-toggle" type="button" aria-label="Show password" aria-pressed="false" aria-controls="authPassword" onclick="togglePasswordVisibility('authPassword',this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+      <div class="form-field hidden" id="confirmPasswordField"><label for="authConfirmPassword">Confirm Password</label><div class="password-control"><input id="authConfirmPassword" type="password" autocomplete="new-password" minlength="8" placeholder="Re-enter your password" aria-describedby="passwordMismatch" oninput="validatePasswordMatch()"><button class="password-toggle" type="button" aria-label="Show confirm password" aria-pressed="false" aria-controls="authConfirmPassword" onclick="togglePasswordVisibility('authConfirmPassword',this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></div><span id="passwordMismatch" class="field-error" role="status" aria-live="polite"></span></div>
       <div id="authError" class="form-alert" role="alert" aria-live="polite"></div>
       <button id="authSubmit" class="btn btn-primary auth-submit" type="submit">Sign in</button>
     </form>
@@ -804,7 +831,7 @@
         <label class="form-field">Caffeine limit · mg<input id="editCaffeine" type="number" min="0" max="2000" step="1" required><small>400 mg/day is a general reference for many healthy adults, not an appropriate target for everyone.</small></label>
         <label class="form-field">Calorie goal · kcal<input id="editCalories" type="number" min="0" max="10000" step="1" required><small>Your goal is personal. Cart calories are only part of your daily intake.</small></label>
         <h3>Dietary preferences</h3>
-        <label class="form-field"><input id="editLactose" type="checkbox">I am lactose intolerant</label>
+        <label class="dietary-check" for="editLactose"><input id="editLactose" type="checkbox"><span>I am lactose intolerant</span></label>
         <div class="health-simple">If you choose whole milk, we’ll suggest oat or almond milk. Other dairy ingredients, including whipped cream, may still be present. These are not verified allergen-safe alternatives.</div>
         <h3>How it works</h3>
         <div class="health-simple">Warnings appear as you customize drinks, add items and check out. They are advisory and do not prevent checkout. Sugar grams, actual consumption and ingredient-level allergen verification are not available in this version.</div>
@@ -858,6 +885,11 @@ function openAuth(mode='login'){
   document.getElementById('nameField').classList.toggle('hidden',!registering);
   document.getElementById('authName').required=registering;
   document.getElementById('authPassword').autocomplete=registering?'new-password':'current-password';
+  document.getElementById('confirmPasswordField').classList.toggle('hidden',!registering);
+  document.getElementById('authConfirmPassword').required=registering;
+  document.getElementById('authConfirmPassword').setCustomValidity('');
+  document.getElementById('passwordMismatch').textContent='';
+  document.getElementById('authConfirmPassword').removeAttribute('aria-invalid');
   document.getElementById('authSubmit').textContent=registering?'Create account':'Sign in';
   document.getElementById('authSwitchText').textContent=registering?'Already a member?':'New to Bangon?';
   document.getElementById('authSwitch').textContent=registering?'Sign in':'Create an account';
@@ -866,7 +898,35 @@ function openAuth(mode='login'){
   document.getElementById('authBackdrop').classList.add('show');
   document.getElementById('authEmail').focus();
 }
-function closeAuth(){document.getElementById('authBackdrop').classList.remove('show');document.getElementById('authForm').reset();}
+function closeAuth(){
+  document.getElementById('authBackdrop').classList.remove('show');
+  document.getElementById('authForm').reset();
+  document.getElementById('passwordMismatch').textContent='';
+  document.getElementById('authConfirmPassword').setCustomValidity('');
+  document.getElementById('authConfirmPassword').removeAttribute('aria-invalid');
+  document.querySelectorAll('#authForm .password-toggle').forEach(button=>{
+    const input=document.getElementById(button.getAttribute('aria-controls'));
+    input.type='password';button.setAttribute('aria-pressed','false');
+    button.setAttribute('aria-label',input.id==='authPassword'?'Show password':'Show confirm password');
+  });
+}
+function togglePasswordVisibility(id,button){
+  const input=document.getElementById(id);
+  const show=input.type==='password';
+  input.type=show?'text':'password';
+  button.setAttribute('aria-pressed',String(show));
+  button.setAttribute('aria-label',(show?'Hide ':'Show ')+(id==='authPassword'?'password':'confirm password'));
+}
+function validatePasswordMatch(force=false){
+  const confirm=document.getElementById('authConfirmPassword');
+  const mismatch=authMode==='register' && confirm.value!==document.getElementById('authPassword').value;
+  const display=mismatch && (force || confirm.value.length>0);
+  confirm.setCustomValidity(display?'Passwords do not match.':'');
+  confirm.setAttribute('aria-invalid',String(display));
+  document.getElementById('passwordMismatch').textContent=display?'Passwords do not match. Please try again.':'';
+  return !mismatch;
+}
+
 function toggleAuth(){openAuth(authMode==='login'?'register':'login');}
 function loginDemo(){openAuth('login');}
 function registerMember(){openAuth('register');}
@@ -878,6 +938,7 @@ async function submitAuth(event){
   const password=document.getElementById('authPassword').value;
   const payload=authMode==='register'?{name:document.getElementById('authName').value.trim(),email,password}:{email,password};
   if(authMode==='register'&&payload.name.length<2){err.textContent='Please enter your full name.';return;}
+  if(authMode==='register'&&!validatePasswordMatch(true)){err.textContent='Please make sure both passwords match.';return;}
   btn.disabled=true;err.textContent='';
   try{
     await api(authMode==='register'?'/api/auth/register':'/api/auth/login',{method:'POST',body:JSON.stringify(payload)});
