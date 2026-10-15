@@ -879,7 +879,7 @@ function openAuth(mode='login'){
   authMode=mode;
   const registering=mode==='register';
   document.getElementById('authTitle').textContent=registering?'Create your account':'Welcome back';
-  document.getElementById('authSubtitle').textContent=registering?'Register to save dietary preferences and earn loyalty points.':'Sign in to access loyalty points and dietary preferences.';
+  document.getElementById('authSubtitle').textContent=registering?'Register to save dietary preferences and earn loyalty points.':'';
   document.getElementById('nameField').classList.toggle('hidden',!registering);
   document.getElementById('authName').required=registering;
   document.getElementById('authPassword').autocomplete=registering?'new-password':'current-password';
