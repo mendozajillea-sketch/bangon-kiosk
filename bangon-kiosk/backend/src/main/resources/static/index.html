@@ -619,8 +619,7 @@
           <button type="button" id="filterCalories" onclick="setNutritionFilter('calories')">Lower calorie ≤ 150 kcal</button>
         </div>
         <div class="product-grid" id="productGrid"></div>
-        <div class="image-credit">
-        </div>
+        
       </main>
 
       <aside class="cart-panel" id="cartPanel">
@@ -821,7 +820,7 @@
 </div>
 <div id="profileBackdrop" class="auth-backdrop" role="dialog" aria-modal="true" aria-labelledby="profileTitle" onclick="if(event.target===this)closeProfileSettings()">
   <div class="auth-card" style="max-width:630px">
-    <div class="auth-heading"><h2 id="profileTitle"> My health preferences</h2><button type="button" class="close" aria-label="Close preferences" onclick="closeProfileSettings()">×</button></div>
+    <div class="auth-heading"><h2 id="profileTitle">My health preferences</h2><button type="button" class="close" aria-label="Close preferences" onclick="closeProfileSettings()">×</button></div>
     <p class="health-lede">Make every cup fit your preferences. We’ll suggest smaller or lower-caffeine choices when your cart approaches your targets.</p>
     <div class="health-panel-body">
       <div class="health-card"><h4>Current order at a glance</h4><div id="profileOrderSnapshot" class="health-caption">No drinks in your cart.</div></div>
@@ -1415,7 +1414,7 @@ function newOrder(){
   activeCategory = "Coffee";
   document.getElementById("searchInput").value = "";
   renderAll();
-  showScreen("welcomeScreen");
+  showScreen("menuScreen");
 }
 
 renderProfile();
