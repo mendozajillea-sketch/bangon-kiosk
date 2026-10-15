@@ -633,7 +633,7 @@
           <div class="health-meter"><div class="health-meter-head"><span>Caffeine</span><strong id="cartCaffeineMeter">0 / 400 mg</strong></div><div class="health-track"><span class="health-fill" id="cartCaffeineFill"></span></div></div>
           <div class="health-meter"><div class="health-meter-head"><span>Calories</span><strong id="cartCalorieMeter">0 / 2,000 kcal</strong></div><div class="health-track"><span class="health-fill" id="cartCalorieFill"></span></div></div>
           <div class="health-caption" id="cartNutritionNote">Cart estimates only; this is not a record of what you've consumed.</div>
-          <div class="wellness-actions"><button type="button" onclick="openProfileSettings()"> Health preferences</button></div>
+          <div class="wellness-actions"><button type="button" onclick="openProfileSettings()">⚙ Health preferences</button></div>
         </div>
         <div id="healthNotices" aria-live="polite"></div>
         <div id="cartItems" class="cart-items"></div>
@@ -717,7 +717,7 @@
 
 <section id="historyScreen" class="screen">
   <div class="simple-screen"><div class="simple-wrap">
-    <button class="back-link" onclick="showScreen('menuScreen')">← Back to menu</button>
+    <button class="back-link" onclick="backToMenu()">← Back to menu</button>
     <div class="simple-card">
       <div class="history-top"><div><h2>My Order History</h2><p class="sub" style="margin-bottom:0">Orders saved to your account, including their payment status.</p></div>
         <button type="button" class="btn btn-secondary" onclick="loadOrderHistory()">Refresh history</button></div>
@@ -1409,12 +1409,22 @@ async function placeOrder(){
   finally{btn.disabled=false;btn.textContent='PLACE ORDER';}
 }
 
+function backToMenu(){
+  showScreen("menuScreen");
+  if(!products.length) loadMenu();
+  else renderAll();
+}
+
 function newOrder(){
+  // A new order opens the existing menu; do not return to Welcome/Login.
   cart = [];
   activeCategory = "Coffee";
-  document.getElementById("searchInput").value = "";
-  renderAll();
+  const search = document.getElementById("searchInput");
+  if(search) search.value = "";
   showScreen("menuScreen");
+  renderAll();
+  // If the menu was not fetched yet, load it without changing the screen.
+  if(!products.length) loadMenu();
 }
 
 renderProfile();
